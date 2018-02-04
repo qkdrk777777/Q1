@@ -18,8 +18,9 @@ t<-addreturn(e.school,addvar=5,matrix=T,del=F)
 colnames(t)<-c('시','군','구')
 
 rowdata<-cbind(e.school,t)
-#devtools::use_data(rowdata, internal = F)
 
+
+#devtools::use_data(rowdata, internal = F)
 
 #시,군,구로 추출
 city<-rowdata[is.na(rowdata$시)!=T,]
