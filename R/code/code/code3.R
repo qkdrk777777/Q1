@@ -1,10 +1,12 @@
 #tot 데이터로
 #경로1<-"G:/새 폴더/data/새 폴더"
 #total data 생성
-
+library(devtools)
+install_github('qkdrk777777/DUcj')
+library(DUcj)
 tot.data<-alldata(경로1,pattern='101_DT',header=T,stringsAsFactors = F)
 names(tot.data)<-c("region","age","year", "pop","male","female" )
-tot.data<-tot.data[,-ncol(tot.data)]
+#tot.data<-tot.data[,-ncol(tot.data)]
 tot.data$year<-as.numeric(substr(tot.data$year,1,4))
 tot.data<-tot.data[order(tot.data$year),]
 #setwd('D:/packages/Q1')
@@ -13,6 +15,8 @@ library(stringr)
 library(plyr)
 
 tot.data$region<-str_replace(tot.data$region," ","")
+unique(tot.data$region)
+
 pred_fun<-function(pred1,year,real=T)
 {if(real==T)temp<-c("6세","7세","8세","9세","10세","11세")
 else if (real!=T)temp<-c("3세","4세","5세","6세","7세","8세")
@@ -24,6 +28,7 @@ return(ddply(del,~region,summarise,'nchild'=sum(pop)))}
 #q!=1이면 year+3년 뒤의 지역별 초등학생수
 
 #r은 year년 관련 자료 p는 year+3년 관련 자료
+unique(pred_fun(tot.data,2010)[,1])
 r_tot<-merge(merge(pred_fun(tot.data,2010),
                    pred_fun(tot.data,2013),by='region'),
              pred_fun(tot.data,2016),by='region')
