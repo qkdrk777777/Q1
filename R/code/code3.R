@@ -1,9 +1,13 @@
 #tot 데이터로
-경로1<-"D:/학교논문/병아리/data/pop"
+#경로1<-"D:/학교논문/병아리/data/pop"
 #total data 생성
-tot.data<-alldata(경로1,pattern='101_DT',skip=2,header=T,stringsAsFactors = F)
-names(tot.data)<-c("id","region","yearid","age","year", "pop","male","female" )
+#tot.data<-alldata(경로1,pattern='101_DT',skip=2,header=T,stringsAsFactors = F)
+#tot.data<-alldata
+#names(tot.data)<-c("id","region","yearid","age","year", "pop","male","female" )
+library(stringr)
+library(plyr)
 
+tot.data[,2]<-str_replace(tot.data[,2]," ","")
 pred_fun<-function(pred1,year,real=T)
 {if(real==T)temp<-c("6세","7세","8세","9세","10세","11세")
 else if (real!=T)temp<-c("3세","4세","5세","6세","7세","8세")
@@ -53,6 +57,6 @@ city<-city[order(city[,i],decreasing =T),]
 cont<-cont[order(cont[,i],decreasing =T),]
 dist<-dist[order(dist[,i],decreasing=T),]  }
 all<-rbind(total,city,cont,dist)
-all<-cbind(region=all[,1],round(all[,2:6]))
-
+#all<-cbind(region=all[,1],round(all[,2:6]))
+#devtools::use_data(all, internal = F,overwrite=T)
 #write.csv(all,'초등학생수예상.csv')
