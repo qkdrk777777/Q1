@@ -28,15 +28,16 @@ return(ddply(del,~region,summarise,'nchild'=sum(pop)))}
 #q!=1이면 year+3년 뒤의 지역별 초등학생수
 
 #r은 year년 관련 자료 p는 year+3년 관련 자료
-unique(pred_fun(tot.data,2010)[,1])
+
+
 r_tot<-merge(merge(pred_fun(tot.data,2010),
-                   pred_fun(tot.data,2013),by='region'),
-             pred_fun(tot.data,2016),by='region')
+                   pred_fun(tot.data,2013),by='region',all=T),
+             pred_fun(tot.data,2016),by='region',all=T)
 colnames(r_tot)=c("region","r_2010","r_2013","r_2016")
 
 p_tot<-merge(merge(pred_fun(tot.data,2010,real=F),
-                   pred_fun(tot.data,2013,real=F),by='region'),
-             pred_fun(tot.data,2016,real=F),by='region')
+                   pred_fun(tot.data,2013,real=F),by='region',all=T),
+             pred_fun(tot.data,2016,real=F),by='region',all=T)
 colnames(p_tot)=c("region","p_2010","p_2013","p_2016")
 
 tot<-merge(r_tot,p_tot,by='region')
