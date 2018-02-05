@@ -57,6 +57,7 @@ city<-city[order(city[,i],decreasing =T),]
 cont<-cont[order(cont[,i],decreasing =T),]
 dist<-dist[order(dist[,i],decreasing=T),]  }
 all<-rbind(total,city,cont,dist)
+
 #all<-cbind(region=all[,1],round(all[,2:6]))
 #devtools::use_data(all, internal = F,overwrite=T)
 #write.csv(all,'초등학생수예상.csv')
