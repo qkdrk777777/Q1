@@ -1,13 +1,18 @@
 #tot 데이터로
-#경로1<-"D:/학교논문/병아리/data/pop"
+#경로1<-"G:/새 폴더/data/새 폴더"
 #total data 생성
-#tot.data<-alldata(경로1,pattern='101_DT',skip=2,header=T,stringsAsFactors = F)
-#tot.data<-alldata
-#names(tot.data)<-c("id","region","yearid","age","year", "pop","male","female" )
+
+tot.data<-alldata(경로1,pattern='101_DT',header=T,stringsAsFactors = F)
+names(tot.data)<-c("region","age","year", "pop","male","female" )
+tot.data<-tot.data[,-ncol(tot.data)]
+tot.data$year<-as.numeric(substr(tot.data$year,1,4))
+tot.data<-tot.data[order(tot.data$year),]
+#setwd('D:/packages/Q1')
+#devtools::use_data(tot.data, internal = F,overwrite=T)
 library(stringr)
 library(plyr)
 
-tot.data[,2]<-str_replace(tot.data[,2]," ","")
+tot.data$region<-str_replace(tot.data$region," ","")
 pred_fun<-function(pred1,year,real=T)
 {if(real==T)temp<-c("6세","7세","8세","9세","10세","11세")
 else if (real!=T)temp<-c("3세","4세","5세","6세","7세","8세")
@@ -30,7 +35,8 @@ p_tot<-merge(merge(pred_fun(tot.data,2010,real=F),
 colnames(p_tot)=c("region","p_2010","p_2013","p_2016")
 
 tot<-merge(r_tot,p_tot,by='region')
-tot[tot[,1]==" 창원시(통합)",1]<-"창원시"
+tot[,1]<-gsub('\\(.+\\)','',tot[,1])
+
 
 #예상/실제
 tot[,ncol(tot)+1]<-tot$p_2010/tot$r_2013
