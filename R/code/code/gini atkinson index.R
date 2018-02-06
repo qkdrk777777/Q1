@@ -55,3 +55,15 @@ for(i in 16:18)  rowdata[,i]<-as.character(rowdata[,i])
 setdiff(unique(c(rowdata$시,rowdata$군,rowdata$구)),unique(rowdata$SGG_NM))
 setdiff(as.character(gsub(" ","",unique(all[-1,1]))),unique(c(rowdata$시,rowdata$군,rowdata$구)))
 all
+
+##########
+all[,5]-all[,4]
+p2017<-all[,4]+(all[,5]-all[,4])/3
+
+qqqq<-all[all[,1]%in%'용인시',]
+fix(qqqq)
+
+setdiff(tdata[,1],all[,1])
+setdiff(all[,1],tdata[,1])
+
+data.frame(전국=as.character(all[,1]),p2017)
