@@ -8,6 +8,7 @@ e.school<-t.school[t.school$SCHL_GRAD_NM=="초",]
 #학생수가 결측인 자료 제거
 e.school<-e.school[e.school$TOT_CLASS_CNT!="",]
 row.names(e.school)<-NULL
+e.school$ADDRESS<-gsub('여주군','여주시',e.school$ADDRESS)
 
 #데이터 구조 변경
 e.school$OPEN_DATE<-as.Date(e.school$OPEN_DATE)
@@ -18,9 +19,11 @@ t<-addreturn(e.school,addvar=5,matrix=T,del=F)
 colnames(t)<-c('시','군','구')
 
 rowdata<-cbind(e.school,t)
-
-
-#devtools::use_data(rowdata, internal = F)
+names(rowdata)
+#e.school[regexpr('여주군',e.school$ADDRESS)!=-1,]
+#rowdata[regexpr('여주군',rowdata[,5])!=-1,]
+#setwd('D:/packages/Q1')
+#devtools::use_data(rowdata, internal = F,overwrite=T)
 
 #시,군,구로 추출
 city<-rowdata[is.na(rowdata$시)!=T,]
