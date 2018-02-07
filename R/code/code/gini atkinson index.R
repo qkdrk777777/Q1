@@ -1,5 +1,6 @@
 devtools::install_github("qkdrk777777/DUcj",force=T)
 library(DUcj)
+
 devtools::install_github('qkdrk777777/Q1',force=T)
 library(Q1)
 package(ineq)
@@ -21,14 +22,23 @@ LCplot<-function(i,col='darkred')
   plot(Lc(data[[2]][,i]),col=col)
   plot(Lc(data[[2]][,i]),col=col)
   par(mfrow=c(1,1))}
-
-
+fix(rowdata)
+rowdata$count<-1
 #시작
-view2<-ddply(rowdata,~시+군+구,summarise,pop=sum(TOT_STDT_CNT),class=sum(TOT_CLASS_CNT),teacher=sum(TOT_TCHR_CNT),office=sum(TOT_OFWR_CNT),pop.of.class=sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT))
+data1<-rowdata[is.na(rowdata$시)!=T,-c(17:18)]
+data2<-rowdata[is.na(rowdata$군)!=T,-c(16,18)]
+data3<-rowdata[is.na(rowdata$구)!=T,-c(16:17)]
+names(data1)[16]<-'구분'
+names(data2)[16]<-'구분'
+names(data3)[16]<-'구분'
+tdata<-rbind(data1,data2,data3)
+
+view2<-ddply(rowdata,~시+군+구,summarise,pop=sum(TOT_STDT_CNT),class=sum(TOT_CLASS_CNT),teacher=sum(TOT_TCHR_CNT),office=sum(TOT_OFWR_CNT),pop.of.class=sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT),count=sum(count))
 view3<-ddply(rowdata,~SD_EDU_OFFC_NM,summarise,pop=sum(TOT_STDT_CNT),class=sum(TOT_CLASS_CNT),teacher=sum(TOT_TCHR_CNT),office=sum(TOT_OFWR_CNT),pop.of.class=sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT))
 data<-list(view2[is.na(view2$시)!=T,c(1,4,8)],view2[is.na(view2$군)!=T,c(2,4,8)],view2[is.na(view2$구)!=T,c(3,4,8)])
 for(i in 1:3)names(data[[i]])<-c("구분","pop","pop.of.class")
 tdata<-rbind(data[[1]],data[[2]],data[[3]])
+
 data<-list(view2[is.na(view2$시)!=T,c(1,4,8)],view2[is.na(view2$군)!=T,c(2,4,8)],view2[is.na(view2$구)!=T,c(3,4,8)])
 
 #지니지수

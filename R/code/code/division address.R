@@ -7,6 +7,7 @@
 addreturn<-function(data,addvar,add2=list(),matrix=F,a=NULL,del=F){
 library(stringr)
   add<-strsplit(gsub('[,-_]','',gsub('\\(.+\\)','',gsub('\\d+',"",data[,addvar])))," ","")
+  if(sum(regexpr('영통구월드컵로',add)!=-1)!=0)  add[regexpr('영통구월드컵로',add)!=-1][[1]][3]<-'영통구'
     for(i in 1:length(add)){
     add[[i]]<-add[[i]][nchar(add[[i]])!=0]
     if(sum(add[[i]]%in%'대구')!=0)add[[i]][add[[i]]%in%'대구']<-'대구 '
