@@ -21,13 +21,16 @@ if(((regexpr('구$',q[[1]]@data$SIG_KOR_NM)!=-1)|(regexpr('군$',q[[1]]@data$SIG
   if(regexpr('시$',q[[1]]@data$SIG_KOR_NM)[i]) q[[1]]@data$SIG_KOR_NM[i]<-gsub('시','시 ',q[[1]]@data$SIG_KOR_NM[i])
 }}
 
-
 tdata[,ncol(tdata)+1]<-tdata$구분
+aa<-setdiff(q[[1]]@data$SIG_KOR_NM,area[,1])
+aa<-aa[order(aa)]
+setdiff(area[,1],tdata[,11])
+setdiff(tdata[,11],area[,1])
 tdata[tdata[,2]%in%unique(substr(setdiff(q[[1]]@data$SIG_KOR_NM,tdata$구분),1,3)),ncol(tdata)]<-paste(
                     tdata[tdata[,2]%in%unique(substr(setdiff(q[[1]]@data$SIG_KOR_NM,tdata$구분),1,3)),2],
                     tdata[tdata[,2]%in%unique(substr(setdiff(q[[1]]@data$SIG_KOR_NM,tdata$구분),1,3)),ncol(tdata)-1])
 
-setdiff(tdata[,11],q[[1]]@data$SIG_KOR_NM)
+
 #강서구 고성군 부천시 북구 남구 서구 동구 중구
 change<-function(input,out){
   q[[1]]@data$SIG_KOR_NM[q[[1]]@data$SIG_KOR_NM%in%input]<<-out}
@@ -49,71 +52,146 @@ setdiff(tdata[,11],q[[1]]@data$SIG_KOR_NM)
 tdata<-data.frame(tdata,count=1)
 
 #수원시 안양시 부천시 고양시 안산시 부천시
-#면적 자료 제외된 곳#한가하면 크롤링으로 매꾸자
+#####
+setdiff(unique(tdata$구분),unique(area[,1]))
+
+
+area<-area[!area[,1]%in%setdiff(area[,1],tdata$V11),]
+colnames(area)<-c('V11','X2016')
+
+t<-merge(tdata,area,by='V11',all=T)
+dim(t)
+library(ineq)
+library(plyr)
+#########
+ww<-ddply(t,~V11,summarise,학교당면적=sum(count)/mean(X2016))
+aa<-ww[is.na(ww[,2]),1]
+a<-c('고성군_(남)','고성군_(경상남도)','덕양구','일산동구','일산서구','남구_(광주광역시)','동구_(광주광역시)',
+     '북구_(광주광역시)','서구_(광주광역시)','남구_(대구광역시)','동구_(대구광역시)','북구_(대구광역시)','서구_(대구광역시)',
+     '중구_(대구광역시)','동구_(대전광역시)','서구_(대전광역시)','중구_(대전광역시)','강서구_(부산광역시)','남구_(부산광역시)',
+     '동구_(부산광역시)','북구_(부산광역시)','서구_(부산광역시)','중구_(부산광역시)','서귀포시','강서구_(서울특별시)','중구_(서울특별시)',
+     '분당구','수정구','중원구','권선구','영통구','장안구','팔달구','단원구','상록구','동안구','만안구','기흥구','수지구','처인구',
+     '남구_(울산광역시)','동구_(울산광역시)','북구_(울산광역시)','중구_(울산광역시)','남구_(인천광역시)','동구_(인천광역시)','서구_(인천광역시)',
+     '중구_(인천광역시)','덕진구','완산구','제주시','마산합포구','마산회원구','성산구','의창구','진해구','동남구','서북구','상당구',
+     '서원구','청원구','흥덕구','남구_(포항시)','북구_(포항시)')
+
 library(DUcj)
 package(XML)
 package(stringr)
 package(RCurl)
 package(rvest)
 
-a<-setdiff(unique(tdata$구분),area[,1])
+x<-NULL
+#a<-setdiff(unique(tdata$구분),area[,1])
 url<-paste0('https://ko.wikipedia.org/wiki/',a)
 for(i in 1:length(url)){
   test<-read_html(url[i])
-test2<-html_nodes(test,css='.infobox')%>%html_text()
-test3<-strsplit(test2,split='\n')
-w<-test3[[1]][regexpr('km2',test3[[1]])!=-1]
-e<-c(e,w)
+  test2<-html_nodes(test,css='.infobox')%>%html_text()
+  test3<-strsplit(test2,split='\n')
+  w<-test3[[1]][regexpr('km2',test3[[1]])!=-1]
+  w<-gsub('[^0-9.]','',w)
+  if(a[i]%in%'마산회원구')w=90.58
+  x=c(x,w)
 }
-gsub('[^0-9.]','',e)
+x
+x<-cbind(aa,as.numeric(x))
+colnames(x)<-colnames(area)
+area<-rbind(area,x)
+area[,2]<-as.integer(area[,2])
 
+t<-merge(tdata,area,by='V11',all=T)
+names(t)
+sum(is.na(t[,6])==T)
+sum(is.na(t[,7])==T)
+sum(is.na(t[,8])==T)
+sum(is.na(t[,9])==T)
+length(unique(t[is.na(t[,9]),3]))
+#############
 
-
-tables <- readHTMLTable(url1)
-edit(benchmark)
-#####
-setdiff(area[,1],tdata$구분)
-area<-area[!area[,1]%in%setdiff(area[,1],tdata$구분),]
-
-t<-merge(tdata,area,by='V11',all.x=T)
-dim(t)
-
-library(ineq)
-library(plyr)
-ddply(t,~V11,summarise,학교당면적=sum(count)/mean(X2016))
-ineq(ddply(t,~V11,summarise,count=sum(count)/mean(X2016))[,2],'Atkinson')
-plot(Lc(ddply(t,~V11,summarise,count=sum(count)/mean(X2016))[,2]))
-fix(tdata)
 #시군구별 평균 학교당 임원수
-head(t)
-colnames(t)
+out0<-ddply(t,~V11,summarise,학교당임원수=sum(TOT_OFWR_CNT)/sum(count))
 #시군구별 평균 학급당 학생수
-out0<-ddply(t,~V11,summarise,학급당학생수=sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT))
+out1<-ddply(t,~V11,summarise,학급당학생수=sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT))
 #시군구별 평균 학교당 교원수
-out1<-ddply(t,~V11,summarise,학교당교원수=sum(TOT_TCHR_CNT)/sum(count))
+out2<-ddply(t,~V11,summarise,학교당교원수=sum(TOT_TCHR_CNT)/sum(count))
 #시군구별 평균 학교당 학급수
-out2<-ddply(t,~V11,summarise,학교당학급수=sum(TOT_CLASS_CNT)/sum(count))
+out3<-ddply(t,~V11,summarise,학교당학급수=sum(TOT_CLASS_CNT)/sum(count))
 #시군구별 평균 교원당 학생수
-out3<-ddply(t,~V11,summarise,교원당학생수=sum(TOT_STDT_CNT)/sum(TOT_TCHR_CNT))
+out4<-ddply(t,~V11,summarise,교원당학생수=sum(TOT_STDT_CNT)/sum(TOT_TCHR_CNT))
 #시군구별 면적당 학생수
-out4<-ddply(t,~V11,summarise,km제곱당학생수=sum(TOT_STDT_CNT)/sum(X2016))
+out5<-ddply(t,~V11,summarise,km제곱당학생수=sum(TOT_STDT_CNT)/sum(X2016))
+#시군구별 평균 학급당 임원수
+out6<-ddply(t,~V11,summarise,학교당임원수=sum(TOT_OFWR_CNT)/sum(TOT_CLASS_CNT))
 #시군구별 학교당 평균 면적
-out5<-ddply(t,~V11,summarise,학교당평균면적=sum(X2016)/sum(count))
+out7<-ddply(t,~V11,summarise,학교당평균면적=sum(X2016)/sum(count))
 
-output<-merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T)
+output<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
 output
 
 summary(output)
-i=7
+i=3
 #par(mfrow=c(2,3))
 #par(mfrow=c(1,1))
 
-col<-as.numeric(cut(output[,i],seq(floor(min(output[,i],na.rm=T)),ceiling(max(output[,i],na.rm=T)),length=9)))
-plot(q[[1]],col=colors[col[qqq]],main=colnames(output)[i],cex.main=2.5)
-
-
 library('RColorBrewer')
-colors =rev(brewer.pal(9,"YlOrRd"))
-qqq<-match(q[[1]]@data$SIG_KOR_NM,output$V11)
-plot(q[[1]],col=colors[col])
-#사립 국립 공립 별로 차이가 있는지
+#plot(q[[1]],col=colors[col])
+pp<-function(i,legend=F){
+  colors =rev(brewer.pal(9,"YlOrRd"))
+  qqq<-match(q[[1]]@data$SIG_KOR_NM,output$V11)
+  col<-as.numeric(cut(output[,i],seq(floor(min(output[,i],na.rm=T)),ceiling(max(output[,i],na.rm=T)),length=10)))
+plot(q[[1]],col=colors[col[qqq]],main=colnames(output)[i],cex.main=2.5)
+tt<-seq(floor(min(output[,i],na.rm=T)),ceiling(max(output[,i],na.rm=T)),length=9)
+tttt<-NULL
+for(i in 2:length(tt)-1)
+{ttt<-paste0(tt[i],'~',tt[i+1])
+tttt<-c(tttt,ttt)}
+tttt
+if(legend){p=locator(1)
+legend(p,legend=tttt,col=colors,pch=16,cex=0.8,bty='n')}
+}
+par(mfrow=c(1,2))
+#pp(2)
+#############지니 엣킨슨
+sum(t[t$V11%in%'강남구',12])
+ineq(t[t$V11%in%'강남구',9]/t[t$V11%in%'강남구',12])
+dim(t)
+#시군구별 학교당 임원수
+out0<-ddply(t,~V11,summarise,학급당임원수_지니=ineq((TOT_OFWR_CNT)/(count)))
+#시군구별 평균 학급당 학생수
+out1<-ddply(t,~V11,summarise,학급당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT)))
+#시군구별 평균 학교당 교원수
+out2<-ddply(t,~V11,summarise,학교당교원수_지니=ineq((TOT_TCHR_CNT)/(count)))
+#시군구별 평균 학교당 학급수
+out3<-ddply(t,~V11,summarise,학교당학급수_지니=ineq((TOT_CLASS_CNT)/(count)))
+#시군구별 평균 교원당 학생수
+out4<-ddply(t,~V11,summarise,교원당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT)))
+#시군구별 면적당 학생수
+out5<-ddply(t,~V11,summarise,km제곱당학생수=ineq((TOT_STDT_CNT)/(X2016)))
+#시군구별 학급당 임원수
+out6<-ddply(t,~V11,summarise,학급당임원수_지니=ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT)))
+#시군구별 학교당 평균 면적
+out7<-ddply(t,~V11,summarise,학교당평균면적=ineq((X2016)/(count)))
+
+output2<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
+summary(output2)
+pp2<-function(i,legend=F){
+  colors =rev(brewer.pal(9,"YlOrRd"))
+  qqq<-match(q[[1]]@data$SIG_KOR_NM,output2$V11)
+  col<-as.numeric(cut(output2[,i],seq(floor(min(output2[,i],na.rm=T)),ceiling(max(output2[,i],na.rm=T)),length=10)))
+  plot(q[[1]],col=colors[col[qqq]],main=colnames(output2)[i],cex.main=2.5)
+  tt<-seq(floor(min(output2[,i],na.rm=T)),ceiling(max(output2[,i],na.rm=T)),length=9)
+  tttt<-NULL
+  for(i in 2:length(tt)-1)
+  {ttt<-paste0(tt[i],'~',tt[i+1])
+  tttt<-c(tttt,ttt)}
+  tttt
+  if(legend){p=locator(1)
+  legend(p,legend=tttt,col=colors,pch=16,cex=0.8,bty='n')}
+}
+summary(output2)
+pp(2,legend=T)
+pp2(2,legend=T)
+pp(3)
+pp2(3)
+pp(4)
+pp2(4)
