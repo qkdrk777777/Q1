@@ -107,7 +107,9 @@ sum(is.na(t[,8])==T)
 sum(is.na(t[,9])==T)
 length(unique(t[is.na(t[,9]),3]))
 #############
-
+summary(output)
+#결측치 제거하고 볼 때 사용
+t<-(t[(is.na(t$TOT_OFWR_CNT)|is.na(t$TOT_TCHR_CNT))!=T,])
 #시군구별 평균 학교당 임원수
 out0<-ddply(t,~V11,summarise,학교당임원수=sum(TOT_OFWR_CNT)/sum(count))
 #시군구별 평균 학급당 학생수
@@ -121,12 +123,11 @@ out4<-ddply(t,~V11,summarise,교원당학생수=sum(TOT_STDT_CNT)/sum(TOT_TCHR_C
 #시군구별 면적당 학생수
 out5<-ddply(t,~V11,summarise,km제곱당학생수=sum(TOT_STDT_CNT)/sum(X2016))
 #시군구별 평균 학급당 임원수
-out6<-ddply(t,~V11,summarise,학교당임원수=sum(TOT_OFWR_CNT)/sum(TOT_CLASS_CNT))
+out6<-ddply(t,~V11,summarise,학급당임원수=sum(TOT_OFWR_CNT)/sum(TOT_CLASS_CNT))
 #시군구별 학교당 평균 면적
 out7<-ddply(t,~V11,summarise,학교당평균면적=sum(X2016)/sum(count))
 
 output<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
-output
 
 summary(output)
 i=3
@@ -152,30 +153,31 @@ legend(p,legend=tttt,col=colors,pch=16,cex=0.8,bty='n')}
 par(mfrow=c(1,2))
 #pp(2)
 #############지니 엣킨슨
-sum(t[t$V11%in%'강남구',12])
-ineq(t[t$V11%in%'강남구',9]/t[t$V11%in%'강남구',12])
-dim(t)
-#시군구별 학교당 임원수
-out0<-ddply(t,~V11,summarise,학급당임원수_지니=ineq((TOT_OFWR_CNT)/(count)))
-#시군구별 평균 학급당 학생수
-out1<-ddply(t,~V11,summarise,학급당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT)))
-#시군구별 평균 학교당 교원수
-out2<-ddply(t,~V11,summarise,학교당교원수_지니=ineq((TOT_TCHR_CNT)/(count)))
-#시군구별 평균 학교당 학급수
-out3<-ddply(t,~V11,summarise,학교당학급수_지니=ineq((TOT_CLASS_CNT)/(count)))
-#시군구별 평균 교원당 학생수
-out4<-ddply(t,~V11,summarise,교원당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT)))
-#시군구별 면적당 학생수
-out5<-ddply(t,~V11,summarise,km제곱당학생수=ineq((TOT_STDT_CNT)/(X2016)))
-#시군구별 학급당 임원수
-out6<-ddply(t,~V11,summarise,학급당임원수_지니=ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT)))
+#sum(t[t$V11%in%'강남구',12])
+#ineq(t[t$V11%in%'강남구',9]/t[t$V11%in%'강남구',12])
+#dim(t)
+#시군구별 학교당 임원수의 불평등지수
+
+out0<-ddply(t,~V11,summarise,학교당임원수_지니=ineq((TOT_OFWR_CNT)/(count),type='Atkinson'))
+#시군구별 평균 학급당 학생수의 불평등지수
+out1<-ddply(t,~V11,summarise,학급당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT),type='Atkinson'))
+#시군구별 평균 학교당 교원수의 불평등지수
+out2<-ddply(t,~V11,summarise,학교당교원수_지니=ineq((TOT_TCHR_CNT)/(count),type='Atkinson'))
+#시군구별 학교당 학급수의 불평등지수
+out3<-ddply(t,~V11,summarise,학교당학급수_지니=ineq((TOT_CLASS_CNT)/(count),type='Atkinson'))
+#시군구별 교원당 학생수의 불평등지수
+out4<-ddply(t,~V11,summarise,교원당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT),type='Atkinson'))
+#시군구별 면적당 학생수의 불평등지수
+out5<-ddply(t,~V11,summarise,km제곱당학생수=ineq((TOT_STDT_CNT)/(X2016),type='Atkinson'))
+#시군구별 학급당 임원수의 불평등지수
+out6<-ddply(t,~V11,summarise,학급당임원수_지니=ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT),type='Atkinson'))
 #시군구별 학교당 평균 면적
-out7<-ddply(t,~V11,summarise,학교당평균면적=ineq((X2016)/(count)))
+out7<-ddply(t,~V11,summarise,학교당평균면적_지니=mean(X2016/count,type='Atkinson'))
 
 output2<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
 summary(output2)
 pp2<-function(i,legend=F){
-  colors =rev(brewer.pal(9,"YlOrRd"))
+  colors =(brewer.pal(9,"YlOrRd"))
   qqq<-match(q[[1]]@data$SIG_KOR_NM,output2$V11)
   col<-as.numeric(cut(output2[,i],seq(floor(min(output2[,i],na.rm=T)),ceiling(max(output2[,i],na.rm=T)),length=10)))
   plot(q[[1]],col=colors[col[qqq]],main=colnames(output2)[i],cex.main=2.5)
@@ -191,7 +193,19 @@ pp2<-function(i,legend=F){
 summary(output2)
 pp(2,legend=T)
 pp2(2,legend=T)
-pp(3)
-pp2(3)
-pp(4)
-pp2(4)
+pp(3,legend=T)
+pp2(3,legend=T)
+pp(4,legend=T)
+pp2(4,legend=T)
+pp(5,legend=T)
+pp2(5,legend=T)
+pp(6,legend=T)
+pp2(6,legend=T)
+pp(7,legend=T)
+pp2(7,legend=T)
+pp(8,legend=T)
+pp2(8,legend=T)
+par(mfrow=c(1,1))
+pp(9,legend=T)
+
+legend(locator(1),legend=paste0('전국의 불평등지수\n\n',round(ineq(out7[,2]),5)),bty='n')
