@@ -13,6 +13,11 @@ tdata$구분<-as.character(tdata$구분)
 library(DUcj)
 #shp파일 이용해서 매칭하기위해 수정
 q<-shp_all('G:/새 폴더/병아리/SIG_201602')
+#q<-readShapePoly('G:/새 폴더/병아리/SIG_201602/TL_SCCO_SIG.shp',
+                 #proj4string=CRS('+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +units=m +no_defs'))
+
+#q@data
+#edit(shp_all)
 q[[1]]@data$SIG_KOR_NM<-as.character(q[[1]]@data$SIG_KOR_NM)
 q[[1]]@data$SIG_KOR_NM[regexpr("부천시",q[[1]]@data$SIG_KOR_NM)!=-1]<-"부천시"
 q[[1]]@data$SIG_KOR_NM<-gsub(" ","",q[[1]]@data$SIG_KOR_NM)
@@ -20,6 +25,7 @@ for(i in 1:length(q[[1]]@data$SIG_KOR_NM)){
 if(((regexpr('구$',q[[1]]@data$SIG_KOR_NM)!=-1)|(regexpr('군$',q[[1]]@data$SIG_KOR_NM)!=-1))[i]){
   if(regexpr('시$',q[[1]]@data$SIG_KOR_NM)[i]) q[[1]]@data$SIG_KOR_NM[i]<-gsub('시','시 ',q[[1]]@data$SIG_KOR_NM[i])
 }}
+
 
 tdata[,ncol(tdata)+1]<-tdata$구분
 aa<-setdiff(q[[1]]@data$SIG_KOR_NM,area[,1])
@@ -268,3 +274,12 @@ for(i in 2:9)
 plot(Lc(output[,i]),col='darkred',main=paste(colnames(output)[i],'로렌츠곡선'))
 output
 output2
+setwd('D://')
+write.csv(output,'output1.csv')
+write.csv(output2,'output2.csv')
+write.csv(output3,'output3.csv')
+
+q[[1]]@data$SIG_KOR_NM<-as.factor(q[[1]]@data$SIG_KOR_NM)
+writeSpatialShape(q[[1]],'q.shp')
+
+
