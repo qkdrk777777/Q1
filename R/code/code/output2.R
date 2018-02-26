@@ -13,7 +13,14 @@ tdata$구분<-as.character(tdata$구분)
 library(DUcj)
 #shp파일 이용해서 매칭하기위해 수정
 q<-shp_all('G:/새 폴더/병아리/SIG_201602')
-#q<-readShapePoly('G:/새 폴더/병아리/SIG_201602/TL_SCCO_SIG.shp',
+from.crs = "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs"
+to.crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+proj4string(q[[1]])<-CRS(from.crs)
+q[[1]]<-spTransform(q[[1]],CRS(to.crs))
+
+
+
+#q<-readShapePoints('G:/새 폴더/병아리/SIG_201602/TL_SCCO_SIG.shp'),
                  #proj4string=CRS('+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +units=m +no_defs'))
 
 #q@data
@@ -102,6 +109,7 @@ for(i in 1:length(url)){
 x
 x<-cbind(aa,as.numeric(x))
 colnames(x)<-colnames(area)
+
 area<-rbind(area,x)
 area[,2]<-as.integer(area[,2])
 
@@ -114,80 +122,87 @@ sum(is.na(t[,8])==T)
 sum(is.na(t[,9])==T)
 length(unique(t[is.na(t[,9]),3]))
 #############
-summary(output)
+summary(t)
+
 #결측치 제거하고 볼 때 사용
 t<-(t[(is.na(t$TOT_OFWR_CNT)|is.na(t$TOT_TCHR_CNT))!=T,])
 #시군구별 평균 학교당 임원수
-out0<-ddply(t,~V11,summarise,학교당임원수=sum(TOT_OFWR_CNT)/sum(count))
+out0<-ddply(t,~V11,summarise,학교당임원수=round(sum(TOT_OFWR_CNT)/sum(count)))
 #시군구별 평균 학급당 학생수
-out1<-ddply(t,~V11,summarise,학급당학생수=sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT))
+out1<-ddply(t,~V11,summarise,학급당학생수=round(sum(TOT_STDT_CNT)/sum(TOT_CLASS_CNT)))
 #시군구별 평균 학교당 교원수
-out2<-ddply(t,~V11,summarise,학교당교원수=sum(TOT_TCHR_CNT)/sum(count))
+out2<-ddply(t,~V11,summarise,학교당교원수=round(sum(TOT_TCHR_CNT)/sum(count)))
 #시군구별 평균 학교당 학급수
-out3<-ddply(t,~V11,summarise,학교당학급수=sum(TOT_CLASS_CNT)/sum(count))
+out3<-ddply(t,~V11,summarise,학교당학급수=round(sum(TOT_CLASS_CNT)/sum(count)))
 #시군구별 평균 교원당 학생수
-out4<-ddply(t,~V11,summarise,교원당학생수=sum(TOT_STDT_CNT)/sum(TOT_TCHR_CNT))
+out4<-ddply(t,~V11,summarise,교원당학생수=round(sum(TOT_STDT_CNT)/sum(TOT_TCHR_CNT)))
 #시군구별 면적당 학생수
-out5<-ddply(t,~V11,summarise,km제곱당학생수=sum(TOT_STDT_CNT)/sum(X2016))
+out5<-ddply(t,~V11,summarise,km제곱당학생수=round(sum(TOT_STDT_CNT)/sum(X2016)))
 #시군구별 평균 학급당 임원수
-out6<-ddply(t,~V11,summarise,학급당임원수=sum(TOT_OFWR_CNT)/sum(TOT_CLASS_CNT))
+out6<-ddply(t,~V11,summarise,학급당임원수=round(sum(TOT_OFWR_CNT)/sum(TOT_CLASS_CNT)))
 #시군구별 학교당 평균 면적
-out7<-ddply(t,~V11,summarise,학교당평균면적=sum(X2016)/sum(count))
+out7<-ddply(t,~V11,summarise,학교당평균면적=round(sum(X2016)/sum(count)))
 
 output<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
 
 summary(output)
 
-i=3
+
 #par(mfrow=c(2,3))
 #par(mfrow=c(1,1))
 
 library('RColorBrewer')
 #plot(q[[1]],col=colors[col])
-pp<-function(i,legend=F){
+pp<-function(i,legend=F,nolocator=F){
   colors =rev(brewer.pal(9,"YlOrRd"))
   qqq<-match(q[[1]]@data$SIG_KOR_NM,output$V11)
   col<-as.numeric(cut(output[,i],seq(floor(min(output[,i],na.rm=T)),ceiling(max(output[,i],na.rm=T)),length=10)))
-plot(q[[1]],col=colors[col[qqq]],main=colnames(output)[i],cex.main=2.5)
+  par(bg='transparent')
+  plot(q[[1]],col=colors[col[qqq]],main=colnames(output)[i],cex.main=2.5)
 tt<-seq(floor(min(output[,i],na.rm=T)),ceiling(max(output[,i],na.rm=T)),length=9)
 tttt<-NULL
 for(i in 2:length(tt)-1)
 {ttt<-paste0(tt[i],'~',tt[i+1])
 tttt<-c(tttt,ttt)}
 tttt
-if(legend){p=locator(1)
-legend(p,legend=tttt,col=colors,pch=16,cex=0.8,bty='n')}
+if(legend){
+  if(nolocator){p<-c(37.25,129.62)
+  legend(p[2],p[1],legend=tttt,col=colors,pch=16,cex=1,bty='n')
+  }else {p<-locator(1)
+legend(p,legend=tttt,col=colors,pch=16,cex=1,bty='n')}}
 }
-par(mfrow=c(1,3))
-#pp(2)
+par(mfrow=c(1,1))
+#pp(2,legend=T,nolocator=T)
+
 #############지니 엣킨슨
 #sum(t[t$V11%in%'강남구',12])
 #ineq(t[t$V11%in%'강남구',9]/t[t$V11%in%'강남구',12])
 #dim(t)
 #시군구별 학교당 임원수의 불평등지수
 
-out0<-ddply(t,~V11,summarise,학교당임원수_지니=ineq((TOT_OFWR_CNT)/(count)))#,type='Atkinson'))
+out0<-ddply(t,~V11,summarise,학교당임원수_지니=round(1000*ineq((TOT_OFWR_CNT)/(count))))#,type='Atkinson'))
 #시군구별 평균 학급당 학생수의 불평등지수
-out1<-ddply(t,~V11,summarise,학급당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT)))#,type='Atkinson'))
+out1<-ddply(t,~V11,summarise,학급당학생수_지니=round(1000*ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT))))#,type='Atkinson'))
 #시군구별 평균 학교당 교원수의 불평등지수
-out2<-ddply(t,~V11,summarise,학교당교원수_지니=ineq((TOT_TCHR_CNT)/(count)))#,type='Atkinson'))
+out2<-ddply(t,~V11,summarise,학교당교원수_지니=round(1000*ineq((TOT_TCHR_CNT)/(count))))#,type='Atkinson'))
 #시군구별 학교당 학급수의 불평등지수
-out3<-ddply(t,~V11,summarise,학교당학급수_지니=ineq((TOT_CLASS_CNT)/(count)))#,type='Atkinson'))
+out3<-ddply(t,~V11,summarise,학교당학급수_지니=round(1000*ineq((TOT_CLASS_CNT)/(count))))#,type='Atkinson'))
 #시군구별 교원당 학생수의 불평등지수
-out4<-ddply(t,~V11,summarise,교원당학생수_지니=ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT)))#,type='Atkinson'))
+out4<-ddply(t,~V11,summarise,교원당학생수_지니=round(1000*ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT))))#,type='Atkinson'))
 #시군구별 면적당 학생수의 불평등지수
-out5<-ddply(t,~V11,summarise,km제곱당학생수_지니=ineq((TOT_STDT_CNT)/(X2016)))#,type='Atkinson'))
+out5<-ddply(t,~V11,summarise,km제곱당학생수_지니=round(1000*ineq((TOT_STDT_CNT)/(X2016))))#,type='Atkinson'))
 #시군구별 학급당 임원수의 불평등지수
-out6<-ddply(t,~V11,summarise,학급당임원수_지니=ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT)))#,type='Atkinson'))
+out6<-ddply(t,~V11,summarise,학급당임원수_지니=round(1000*ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT))))#,type='Atkinson'))
 #시군구별 학교당 평균 면적
-out7<-ddply(t,~V11,summarise,학교당평균면적=sum(X2016)/sum(count))
+out7<-ddply(t,~V11,summarise,학교당평균면적=round(sum(X2016)/sum(count)))
 
 output2<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
 summary(output2)
-pp2<-function(i,legend=F){
+pp2<-function(i,legend=F,nolocator=F){
   colors =(brewer.pal(9,"YlOrRd"))
   qqq<-match(q[[1]]@data$SIG_KOR_NM,output2$V11)
   col<-as.numeric(cut(output2[,i],seq(floor(min(output2[,i],na.rm=T)),ceiling(max(output2[,i],na.rm=T)),length=10)))
+  par(bg='transparent')
   plot(q[[1]],col=colors[col[qqq]],main=colnames(output2)[i],cex.main=2.5)
   tt<-seq(floor(min(output2[,i],na.rm=T)),ceiling(max(output2[,i],na.rm=T)),length=9)
   tttt<-NULL
@@ -195,8 +210,11 @@ pp2<-function(i,legend=F){
   {ttt<-paste0(tt[i],'~',tt[i+1])
   tttt<-c(tttt,ttt)}
   tttt
-  if(legend){p=locator(1)
-  legend(p,legend=tttt,col=colors,pch=16,cex=0.8,bty='n')}
+  if(legend){
+    if(nolocator){p<-c(37.25,129.62)
+    legend(p[2],p[1],legend=tttt,col=colors,pch=16,cex=1,bty='n')
+    }else {p<-locator(1)
+    legend(p,legend=tttt,col=colors,pch=16,cex=1,bty='n')}}
 }
 summary(output2)
 
@@ -204,28 +222,29 @@ summary(output2)
 ############
 #엣킨슨
 
-out0<-ddply(t,~V11,summarise,학교당임원수_앳킨슨=ineq((TOT_OFWR_CNT)/(count),type='Atkinson'))
+out0<-ddply(t,~V11,summarise,학교당임원수_앳킨슨=round(1000*ineq((TOT_OFWR_CNT)/(count),type='Atkinson')))
 #시군구별 평균 학급당 학생수의 불평등지수
-out1<-ddply(t,~V11,summarise,학급당학생수_앳킨슨=ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT),type='Atkinson'))
+out1<-ddply(t,~V11,summarise,학급당학생수_앳킨슨=round(1000*ineq((TOT_STDT_CNT)/(TOT_CLASS_CNT),type='Atkinson')))
 #시군구별 평균 학교당 교원수의 불평등지수
-out2<-ddply(t,~V11,summarise,학교당교원수_앳킨슨=ineq((TOT_TCHR_CNT)/(count),type='Atkinson'))
+out2<-ddply(t,~V11,summarise,학교당교원수_앳킨슨=round(1000*ineq((TOT_TCHR_CNT)/(count),type='Atkinson')))
 #시군구별 학교당 학급수의 불평등지수
-out3<-ddply(t,~V11,summarise,학교당학급수_앳킨슨=ineq((TOT_CLASS_CNT)/(count),type='Atkinson'))
+out3<-ddply(t,~V11,summarise,학교당학급수_앳킨슨=round(1000*ineq((TOT_CLASS_CNT)/(count),type='Atkinson')))
 #시군구별 교원당 학생수의 불평등지수
-out4<-ddply(t,~V11,summarise,교원당학생수_앳킨슨=ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT),type='Atkinson'))
+out4<-ddply(t,~V11,summarise,교원당학생수_앳킨슨=round(1000*ineq((TOT_STDT_CNT)/(TOT_TCHR_CNT),type='Atkinson')))
 #시군구별 면적당 학생수의 불평등지수
-out5<-ddply(t,~V11,summarise,km제곱당학생수_앳킨슨=ineq((TOT_STDT_CNT)/(X2016),type='Atkinson'))
+out5<-ddply(t,~V11,summarise,km제곱당학생수_앳킨슨=round(1000*ineq((TOT_STDT_CNT)/(X2016),type='Atkinson')))
 #시군구별 학급당 임원수의 불평등지수
-out6<-ddply(t,~V11,summarise,학급당임원수_앳킨슨=ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT),type='Atkinson'))
+out6<-ddply(t,~V11,summarise,학급당임원수_앳킨슨=round(1000*ineq((TOT_OFWR_CNT)/(TOT_CLASS_CNT),type='Atkinson')))
 #시군구별 학교당 평균 면적
-out7<-ddply(t,~V11,summarise,학교당평균면적=sum(X2016)/sum(count))
+out7<-ddply(t,~V11,summarise,학교당평균면적=round(sum(X2016)/sum(count)))
 
 output3<-merge(merge(merge(merge(merge(merge(merge(out0,out1,by='V11',all=T),out2,by='V11',all=T),out3,by='V11',all=T),out4,by='V11',all=T),out5,by='V11',all=T),out6,by='V11',all=T),out7,by='V11',all=T)
 summary(output3)
-pp3<-function(i,legend=F){
+pp3<-function(i,legend=F,nolocator=F){
   colors =(brewer.pal(9,"YlOrRd"))
   qqq<-match(q[[1]]@data$SIG_KOR_NM,output3$V11)
   col<-as.numeric(cut(output3[,i],seq(floor(min(output3[,i],na.rm=T)),ceiling(max(output3[,i],na.rm=T)),length=10)))
+  par(bg='transparent')
   plot(q[[1]],col=colors[col[qqq]],main=colnames(output3)[i],cex.main=2.5)
   tt<-seq(floor(min(output3[,i],na.rm=T)),ceiling(max(output3[,i],na.rm=T)),length=9)
   tttt<-NULL
@@ -233,35 +252,63 @@ pp3<-function(i,legend=F){
   {ttt<-paste0(tt[i],'~',tt[i+1])
   tttt<-c(tttt,ttt)}
   tttt
-  if(legend){p=locator(1)
-  legend(p,legend=tttt,col=colors,pch=16,cex=0.8,bty='n')}
+  if(legend){
+    if(nolocator){p<-c(37.25,129.62)
+    legend(p[2],p[1],legend=tttt,col=colors,pch=16,cex=1,bty='n')
+    }else {p<-locator(1)
+    legend(p,legend=tttt,col=colors,pch=16,cex=1,bty='n')}}
 }
 summary(output3)
 
+
+#####
+png('1.png')
+par(mfrow=c(1,3),bg='transparent')
 ##plot
-pp(2,legend=T)
-pp2(2,legend=T)
-pp3(2,legend=T)
-pp(3,legend=T)
-pp2(3,legend=T)
-pp3(3,legend=T)
-pp(4,legend=T)
-pp2(4,legend=T)
-pp3(4,legend=T)
-pp(5,legend=T)
-pp2(5,legend=T)
-pp3(5,legend=T)
-pp(6,legend=T)
-pp2(6,legend=T)
-pp3(6,legend=T)
-pp(7,legend=T)
-pp2(7,legend=T)
-pp3(7,legend=T)
-pp(8,legend=T)
-pp2(8,legend=T)
-pp3(8,legend=T)
-par(mfrow=c(1,1))
-pp(9,legend=T)
+pp(2,legend=T,nolocator=T)
+pp2(2,legend=T,nolocator=T)
+pp3(2,legend=T,nolocator=T)
+dev.off()
+png('2.png')
+par(mfrow=c(1,3),bg='transparent')
+pp(3,legend=T,nolocator=T)
+pp2(3,legend=T,nolocator=T)
+pp3(3,legend=T,nolocator=T)
+dev.off()
+png('3.png')
+par(mfrow=c(1,3),bg='transparent')
+pp(4,legend=T,nolocator=T)
+pp2(4,legend=T,nolocator=T)
+pp3(4,legend=T,nolocator=T)
+dev.off()
+png('4.png')
+par(mfrow=c(1,3),bg='transparent')
+pp(5,legend=T,nolocator=T)
+pp2(5,legend=T,nolocator=T)
+pp3(5,legend=T,nolocator=T)
+dev.off()
+png('5.png')
+par(mfrow=c(1,3),bg='transparent')
+pp(6,legend=T,nolocator=T)
+pp2(6,legend=T,nolocator=T)
+pp3(6,legend=T,nolocator=T)
+dev.off()
+png('6.png')
+par(mfrow=c(1,3),bg='transparent')
+pp(7,legend=T,nolocator=T)
+pp2(7,legend=T,nolocator=T)
+pp3(7,legend=T,nolocator=T)
+dev.off()
+png('7.png')
+par(mfrow=c(1,3),bg='transparent')
+pp(8,legend=T,nolocator=T)
+pp2(8,legend=T,nolocator=T)
+pp3(8,legend=T,nolocator=T)
+dev.off()
+png('8.png',bg='transparent')
+par(mfrow=c(1,1),bg='transparent')
+pp(9,legend=T,nolocator=T)
+dev.off()
 
 legend(locator(1),legend=paste0('불평등지수\n\n',round(ineq(out7[,2]),5),'\n',round(ineq(out7[,2],type='Atkinson'),5)),bty='n')
 fix(rowdata)
@@ -269,17 +316,48 @@ head(rowdata2,3)
 dim(rowdata2)
 colnames(output)
 i=2
-par(mfrow=c(2,4))
+png('10.png')
+par(mfrow=c(2,4),bg='transparent',pty='s',mar=c(4,2,2,3))
 for(i in 2:9)
-plot(Lc(output[,i]),col='darkred',main=paste(colnames(output)[i],'로렌츠곡선'))
+plot(Lc(output[,i]),col='darkred',cex.main=1,main=paste(colnames(output)[i],'로렌츠곡선'),bty='l')
+dev.off()
 output
 output2
 setwd('D://')
 write.csv(output,'output1.csv')
 write.csv(output2,'output2.csv')
 write.csv(output3,'output3.csv')
+################
+del<-coordinates(q[[1]])
+colnames(del)<-c('lon','lat')
+del2<-data.frame(del,q[[1]]@data$SIG_KOR_NM)
+colnames(del2)<-c(colnames(del),'SIG_KOR_NM')
 
-q[[1]]@data$SIG_KOR_NM<-as.factor(q[[1]]@data$SIG_KOR_NM)
-writeSpatialShape(q[[1]],'q.shp')
+#q[[1]]@data$SIG_KOR_NM<-as.factor(q[[1]]@data$SIG_KOR_NM)
+setwd('C:\\Users\\qkdrk\\Desktop\\satscan')
+getwd()
 
+#q[[1]]@data<-q[[1]]@data[,-c(5:ncol(q[[1]]@data))]
+q[[1]]@data<-data.frame(q[[1]]@data,output[match(q[[1]]@data$SIG_KOR_NM,output$V11),])
+#q[[1]]@data<-data.frame(q[[1]]@data,del2[match(q[[1]]@data$SIG_KOR_NM,del2$SIG_KOR_NM),])
+q[[1]]@data<-cbind(q[[1]]@data,pop=1000)
+for(i in 6:14)
+  q[[1]]@data[,i]<-as.integer(q[[1]]@data[,i])
+writeSpatialShape(q[[1]],'out1.shp')
+str(q[[1]]@data)
+del3<-q[[1]]@data
+q[[1]]@data<-q[[1]]@data[,-c(5:ncol(q[[1]]@data))]
+q[[1]]@data<-data.frame(q[[1]]@data,output2[match(q[[1]]@data$SIG_KOR_NM,output2$V11),])
+q[[1]]@data<-data.frame(q[[1]]@data,del2[match(q[[1]]@data$SIG_KOR_NM,del2$SIG_KOR_NM),])
+q[[1]]@data<-cbind(q[[1]]@data,pop=1000)
+for(i in 6:13)
+  q[[1]]@data[,i]<-as.integer(q[[1]]@data[,i])
+writeSpatialShape(q[[1]],'out2.shp')
 
+q[[1]]@data<-q[[1]]@data[,-c(5:ncol(q[[1]]@data))]
+q[[1]]@data<-data.frame(q[[1]]@data,output3[match(q[[1]]@data$SIG_KOR_NM,output3$V11),])
+q[[1]]@data<-data.frame(q[[1]]@data,del2[match(q[[1]]@data$SIG_KOR_NM,del2$SIG_KOR_NM),])
+q[[1]]@data<-cbind(q[[1]]@data,pop=1000)
+for(i in 6:13)
+  q[[1]]@data[,i]<-as.integer(q[[1]]@data[,i])
+writeSpatialShape(q[[1]],'out3.shp')
